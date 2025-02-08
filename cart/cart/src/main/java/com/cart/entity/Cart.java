@@ -1,8 +1,9 @@
-package com.wishlist.cart.entity;
+package com.cart.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -21,5 +22,6 @@ public class Cart {
     private LocalDateTime createdDate;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItem> items;  // Each cart has multiple items
+    private List<CartItem> items = new ArrayList<>();  // Initialize list to prevent null
+
 }

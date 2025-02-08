@@ -1,8 +1,8 @@
-package com.wishlist.cart.controller;
+package com.cart.controller;
 
-import com.wishlist.cart.dto.cart.CartRequestDTO;
-import com.wishlist.cart.dto.cart.CartResponseDTO;
-import com.wishlist.cart.service.CartService;
+import com.cart.dto.CartRequestDTO;
+import com.cart.dto.CartResponseDTO;
+import com.cart.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

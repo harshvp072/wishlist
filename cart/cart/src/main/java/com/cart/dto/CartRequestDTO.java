@@ -1,4 +1,4 @@
-package com.wishlist.cart.dto.cart;
+package com.cart.dto;
 
 import lombok.Data;
 import java.util.List;

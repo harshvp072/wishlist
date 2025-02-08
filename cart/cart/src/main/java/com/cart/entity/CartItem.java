@@ -1,4 +1,4 @@
-package com.wishlist.cart.entity;
+package com.cart.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

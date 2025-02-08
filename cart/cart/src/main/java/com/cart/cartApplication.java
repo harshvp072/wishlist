@@ -1,13 +1,13 @@
-package com.wishlist.cart;
+package com.cart;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WishListApplication {
+public class cartApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(WishListApplication.class, args);
+		SpringApplication.run(cartApplication.class, args);
 	}
 
 }

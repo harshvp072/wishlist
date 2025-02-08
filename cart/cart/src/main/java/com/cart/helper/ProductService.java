@@ -1,4 +1,4 @@
-package com.wishlist.cart.helper;
+package com.cart.helper;
 
 import org.springframework.stereotype.Service;
 

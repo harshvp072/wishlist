@@ -1,4 +1,4 @@
-package com.wishlist.cart.helper;
+package com.cart.helper;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -29,7 +29,31 @@ public class IdentityService {
     }
 
     public String getUserIdFromToken(String token) {
-        // Logic to extract userId from the token (e.g., by calling Identity API or decoding JWT)
-        return "extracted-user-id"; // Mocked response
+        System.out.println("Received Token: [" + token + "]"); // Debugging
+
+        if (token == null || token.isEmpty()) {
+            throw new RuntimeException("Token is missing");
+        }
+
+        // Extract token if it starts with "Bearer "
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        System.out.println("Extracted Token: [" + token + "]"); // Debugging
+
+        // ✅ Instead of hardcoding, simulate dynamic users for testing
+        Map<String, String> mockTokens = new HashMap<>();
+        mockTokens.put("H.V.P-072", "user-124");
+        mockTokens.put("A.B.C-101", "user-200");
+        mockTokens.put("X.Y.Z-999", "user-300");
+
+        if (mockTokens.containsKey(token)) {
+            return mockTokens.get(token);
+        }
+
+        throw new RuntimeException("Invalid token");
     }
+
+
 }

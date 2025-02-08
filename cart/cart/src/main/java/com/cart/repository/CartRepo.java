@@ -1,6 +1,6 @@
-package com.wishlist.cart.repository;
+package com.cart.repository;
 
-import com.wishlist.cart.entity.Cart;
+import com.cart.entity.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
