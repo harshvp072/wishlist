@@ -3,25 +3,23 @@ package com.wishlist.cart.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
-@Table(name = "cart")
+@Table(name = "cart", uniqueConstraints = @UniqueConstraint(columnNames = "user_id"))  // Ensures one cart per user
 public class Cart {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generate ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false, unique = true)  // Unique userId ensures one cart per user
     private String userId;
-
-    @Column(name = "product_id", nullable = false)
-    private String productId;
-
-    @Column(name = "quantity", nullable = false)
-    private int quantity;
 
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate;
+
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> items;  // Each cart has multiple items
 }
