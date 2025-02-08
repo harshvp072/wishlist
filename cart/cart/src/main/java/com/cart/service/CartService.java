@@ -11,7 +11,6 @@ import com.cart.helper.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +25,13 @@ public class CartService {
     private final IdentityService identityService;
     private final ProductService productService;
 
+    /**
+     * Retrieves the cart for a user based on the provided token.
+     * If the cart doesn't exist, a new cart is created for the user.
+     *
+     * @param token Authentication token of the user
+     * @return CartResponseDTO representing the user's cart
+     */
     public CartResponseDTO getCart(String token) {
         try {
             String userId = identityService.getUserIdFromToken(token);
@@ -37,6 +43,15 @@ public class CartService {
         }
     }
 
+    /**
+     * Adds items to the user's cart.
+     * If the cart does not exist, a new one is created.
+     * Ensures products are valid before adding them.
+     *
+     * @param token          Authentication token of the user
+     * @param cartRequestDTO The request DTO containing items to be added
+     * @return CartResponseDTO representing the updated cart
+     */
     @Transactional
     public CartResponseDTO addToCart(String token, CartRequestDTO cartRequestDTO) {
         try {
@@ -65,11 +80,23 @@ public class CartService {
         }
     }
 
+    /**
+     * Creates a new cart for a user and returns it as a response DTO.
+     *
+     * @param userId The ID of the user
+     * @return CartResponseDTO representing the newly created cart
+     */
     private CartResponseDTO createNewCart(String userId) {
         Cart cart = createCart(userId);
         return convertToResponseDTO(cart);
     }
 
+    /**
+     * Creates a new cart entity for the user.
+     *
+     * @param userId The ID of the user
+     * @return The created Cart entity
+     */
     private Cart createCart(String userId) {
         Cart cart = new Cart();
         cart.setUserId(userId);
@@ -78,6 +105,12 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
+    /**
+     * Converts a Cart entity to a CartResponseDTO.
+     *
+     * @param cart The Cart entity to convert
+     * @return CartResponseDTO representing the cart
+     */
     private CartResponseDTO convertToResponseDTO(Cart cart) {
         CartResponseDTO cartResponseDTO = new CartResponseDTO();
         cartResponseDTO.setCartId(cart.getId()); // Use cartId instead of id
@@ -95,5 +128,4 @@ public class CartService {
         cartResponseDTO.setItems(cartItemDTOS);
         return cartResponseDTO;
     }
-
 }
