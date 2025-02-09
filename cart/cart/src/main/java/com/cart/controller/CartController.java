@@ -27,6 +27,30 @@ public class CartController {
         }
     }
 
+    @DeleteMapping("/clear")
+    public ResponseEntity<?> clearCart(@RequestHeader("Authorization") String token) {
+        try {
+            cartService.clearCart(token);
+            return ResponseEntity.ok("Cart cleared successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+    @DeleteMapping("/remove/{productId}")
+    public ResponseEntity<?> removeCartItem(@RequestHeader("Authorization") String token,
+                                            @PathVariable String productId) {
+        try {
+            CartResponseDTO updatedCart = cartService.removeCartItem(token, productId);
+            return ResponseEntity.ok(updatedCart);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+
     @PostMapping("/add")
     public ResponseEntity<?> addToCart(@RequestHeader("Authorization") String token,
                                        @RequestBody CartRequestDTO cartRequestDTO) {

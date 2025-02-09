@@ -25,13 +25,6 @@ public class CartService {
     private final IdentityService identityService;
     private final ProductService productService;
 
-    /**
-     * Retrieves the cart for a user based on the provided token.
-     * If the cart doesn't exist, a new cart is created for the user.
-     *
-     * @param token Authentication token of the user
-     * @return CartResponseDTO representing the user's cart
-     */
     public CartResponseDTO getCart(String token) {
         try {
             String userId = identityService.getUserIdFromToken(token);
@@ -43,15 +36,6 @@ public class CartService {
         }
     }
 
-    /**
-     * Adds items to the user's cart.
-     * If the cart does not exist, a new one is created.
-     * Ensures products are valid before adding them.
-     *
-     * @param token          Authentication token of the user
-     * @param cartRequestDTO The request DTO containing items to be added
-     * @return CartResponseDTO representing the updated cart
-     */
     @Transactional
     public CartResponseDTO addToCart(String token, CartRequestDTO cartRequestDTO) {
         try {
@@ -59,11 +43,11 @@ public class CartService {
             Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
 
             if (cart.getItems() == null) {
-                cart.setItems(new ArrayList<>()); // Prevent NullPointerException
+                cart.setItems(new ArrayList<>());
             }
 
             for (CartItemDTO itemDTO : cartRequestDTO.getItems()) {
-                productService.validateProduct(itemDTO.getProductId());  // Check product validity
+                productService.validateProduct(itemDTO.getProductId());
 
                 CartItem cartItem = new CartItem();
                 cartItem.setCart(cart);
@@ -80,46 +64,75 @@ public class CartService {
         }
     }
 
-    /**
-     * Creates a new cart for a user and returns it as a response DTO.
-     *
-     * @param userId The ID of the user
-     * @return CartResponseDTO representing the newly created cart
-     */
+    @Transactional
+    public CartResponseDTO updateCartItem(String token, CartItemDTO cartItemDTO) {
+        String userId = identityService.getUserIdFromToken(token);
+        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        cart.getItems().stream()
+                .filter(item -> item.getProductId().equals(cartItemDTO.getProductId()))
+                .findFirst()
+                .ifPresent(item -> item.setQuantity(cartItemDTO.getQuantity()));
+
+        cartRepository.save(cart);
+        return convertToResponseDTO(cart);
+    }
+
+    @Transactional
+    public CartResponseDTO removeCartItem(String token, String productId) {
+        String userId = identityService.getUserIdFromToken(token);
+        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        cart.getItems().removeIf(item -> item.getProductId().equals(productId));
+
+        cartRepository.save(cart);
+        return convertToResponseDTO(cart);
+    }
+
+    @Transactional
+    public void clearCart(String token) {
+        String userId = identityService.getUserIdFromToken(token);
+        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+        cart.getItems().clear();
+        cartRepository.save(cart);
+    }
+
+    @Transactional
+    public String checkoutCart(String token) {
+        String userId = identityService.getUserIdFromToken(token);
+        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        if (cart.getItems().isEmpty()) {
+            throw new RuntimeException("Cart is empty, cannot proceed with checkout");
+        }
+
+        String orderId = "ORDER-" + System.currentTimeMillis();
+        clearCart(token);
+        return orderId;
+    }
+
     private CartResponseDTO createNewCart(String userId) {
         Cart cart = createCart(userId);
         return convertToResponseDTO(cart);
     }
 
-    /**
-     * Creates a new cart entity for the user.
-     *
-     * @param userId The ID of the user
-     * @return The created Cart entity
-     */
     private Cart createCart(String userId) {
         Cart cart = new Cart();
         cart.setUserId(userId);
         cart.setCreatedDate(LocalDateTime.now());
-        cart.setItems(new ArrayList<>());  // Ensure items list is initialized
+        cart.setItems(new ArrayList<>());
         return cartRepository.save(cart);
     }
 
-    /**
-     * Converts a Cart entity to a CartResponseDTO.
-     *
-     * @param cart The Cart entity to convert
-     * @return CartResponseDTO representing the cart
-     */
     private CartResponseDTO convertToResponseDTO(Cart cart) {
         CartResponseDTO cartResponseDTO = new CartResponseDTO();
-        cartResponseDTO.setCartId(cart.getId()); // Use cartId instead of id
+        cartResponseDTO.setCartId(cart.getId());
         cartResponseDTO.setUserId(cart.getUserId());
         cartResponseDTO.setCreatedDate(cart.getCreatedDate());
 
         List<CartItemDTO> cartItemDTOS = cart.getItems().stream().map(item -> {
             CartItemDTO dto = new CartItemDTO();
-            dto.setCartItemId(item.getId()); // Use cartItemId instead of id
+            dto.setCartItemId(item.getId());
             dto.setProductId(item.getProductId());
             dto.setQuantity(item.getQuantity());
             return dto;
