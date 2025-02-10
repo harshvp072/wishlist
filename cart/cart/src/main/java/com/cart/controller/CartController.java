@@ -44,20 +44,18 @@ public class CartController {
         try {
             CartResponseDTO updatedCart = cartService.removeCartItem(token, productId);
             return ResponseEntity.ok(new ApiResponse<>(true, "Item removed successfully", updatedCart));
-        }  catch (Exception e) {
+        }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "An unexpected error occurred.", null));
         }
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse<CartResponseDTO>> addToCart(
-            @RequestHeader("Authorization") String token,
-            @RequestBody CartRequestDTO cartRequestDTO) {
-
+    public ResponseEntity<ApiResponse<CartResponseDTO>> addToCart(@RequestHeader("Authorization") String token,
+                                                                  @RequestBody CartRequestDTO cartRequestDTO) {
         try {
             CartResponseDTO cartResponse = cartService.addToCart(token, cartRequestDTO);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Item added successfully", cartResponse));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Item added to cart successfully", cartResponse));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "An unexpected error occurred.", null));

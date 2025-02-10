@@ -40,67 +40,59 @@ public class CartService {
     public CartResponseDTO addToCart(String token, CartRequestDTO cartRequestDTO) {
         try {
             String userId = identityService.getUserIdFromToken(token);
-
-            // Fetch existing cart or create a new one
             Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
 
-            // Ensure the cart's item list is initialized
             if (cart.getItems() == null) {
                 cart.setItems(new ArrayList<>());
             }
 
-            // Validate all products before adding them to the cart
             for (CartItemDTO itemDTO : cartRequestDTO.getItems()) {
-                if (!productService.validateProduct(itemDTO.getProductId())) {
-                    throw new IllegalArgumentException("Invalid product ID: " + itemDTO.getProductId());
+                productService.validateProduct(itemDTO.getProductId()); // ✅ Validate product before adding
+
+                // 🔹 Check if product is already in the cart
+                Optional<CartItem> existingItem = cart.getItems().stream()
+                        .filter(item -> item.getProductId().equals(itemDTO.getProductId()))
+                        .findFirst();
+
+                if (existingItem.isPresent()) {
+                    // 🔹 If exists, update quantity
+                    existingItem.get().setQuantity(existingItem.get().getQuantity() + itemDTO.getQuantity());
+                } else {
+                    // 🔹 Else, create a new cart item
+                    CartItem cartItem = new CartItem();
+                    cartItem.setCart(cart);
+                    cartItem.setProductId(itemDTO.getProductId());
+                    cartItem.setQuantity(itemDTO.getQuantity());
+                    cart.getItems().add(cartItem);
                 }
             }
 
-            // Now add validated products to the cart
-            for (CartItemDTO itemDTO : cartRequestDTO.getItems()) {
-                CartItem cartItem = new CartItem();
-                cartItem.setCart(cart);
-                cartItem.setProductId(itemDTO.getProductId());
-                cartItem.setQuantity(itemDTO.getQuantity());
-
-                cart.getItems().add(cartItem);
-            }
-
-            // Save the updated cart
             cartRepository.save(cart);
             return convertToResponseDTO(cart);
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Error adding item to cart: " + e.getMessage(), e);
         }
     }
 
-
-    public CartResponseDTO updateCartItem(String token, CartItemDTO cartItemDTO) {
-        String userId = identityService.getUserIdFromToken(token);
-        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
-
-        List<CartItem> items = cart.getItems();
-        for (CartItem item : items) {
-            if (item.getProductId().equals(cartItemDTO.getProductId())) {
-                item.setQuantity(cartItemDTO.getQuantity());
-                break;
-            }
-        }
-
-        cartRepository.save(cart);
-        return convertToResponseDTO(cart);
-    }
-
-
     @Transactional
     public CartResponseDTO removeCartItem(String token, String productId) {
-        String userId = identityService.getUserIdFromToken(token);
-        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+        try {
+            productService.validateProduct(productId); // ✅ Validate product before removing
 
-        cart.getItems().removeIf(item -> item.getProductId().equals(productId));
+            String userId = identityService.getUserIdFromToken(token);
+            Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        cartRepository.save(cart);
-        return convertToResponseDTO(cart);
+            boolean removed = cart.getItems().removeIf(item -> item.getProductId().equals(productId));
+
+            if (!removed) {
+                throw new RuntimeException("Product not found in cart");
+            }
+
+            cartRepository.save(cart);
+            return convertToResponseDTO(cart);
+        } catch (Exception e) {
+            throw new RuntimeException("Error removing item from cart: " + e.getMessage(), e);
+        }
     }
 
     @Transactional
@@ -109,20 +101,6 @@ public class CartService {
         Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
         cart.getItems().clear();
         cartRepository.save(cart);
-    }
-
-    @Transactional
-    public String checkoutCart(String token) {
-        String userId = identityService.getUserIdFromToken(token);
-        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
-
-        if (cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty, cannot proceed with checkout");
-        }
-
-        String orderId = "ORDER-" + System.currentTimeMillis();
-        clearCart(token);
-        return orderId;
     }
 
     private CartResponseDTO createNewCart(String userId) {
@@ -146,7 +124,6 @@ public class CartService {
 
         List<CartItemDTO> cartItemDTOS = cart.getItems().stream().map(item -> {
             CartItemDTO dto = new CartItemDTO();
-            dto.setCartItemId(item.getId());
             dto.setProductId(item.getProductId());
             dto.setQuantity(item.getQuantity());
             return dto;
