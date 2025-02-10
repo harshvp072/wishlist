@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class CartItemDTO {
-    private Long cartItemId; // Renamed from id
+    private Long cartItemId;
     private String productId;
     private int quantity;
 }

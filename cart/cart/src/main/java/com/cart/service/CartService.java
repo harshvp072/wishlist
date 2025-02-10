@@ -40,15 +40,24 @@ public class CartService {
     public CartResponseDTO addToCart(String token, CartRequestDTO cartRequestDTO) {
         try {
             String userId = identityService.getUserIdFromToken(token);
+
+            // Fetch existing cart or create a new one
             Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
 
+            // Ensure the cart's item list is initialized
             if (cart.getItems() == null) {
                 cart.setItems(new ArrayList<>());
             }
 
+            // Validate all products before adding them to the cart
             for (CartItemDTO itemDTO : cartRequestDTO.getItems()) {
-                productService.validateProduct(itemDTO.getProductId());
+                if (!productService.validateProduct(itemDTO.getProductId())) {
+                    throw new IllegalArgumentException("Invalid product ID: " + itemDTO.getProductId());
+                }
+            }
 
+            // Now add validated products to the cart
+            for (CartItemDTO itemDTO : cartRequestDTO.getItems()) {
                 CartItem cartItem = new CartItem();
                 cartItem.setCart(cart);
                 cartItem.setProductId(itemDTO.getProductId());
@@ -57,26 +66,31 @@ public class CartService {
                 cart.getItems().add(cartItem);
             }
 
+            // Save the updated cart
             cartRepository.save(cart);
             return convertToResponseDTO(cart);
-        } catch (Exception e) {
+        }catch (Exception e) {
             throw new RuntimeException("Error adding item to cart: " + e.getMessage(), e);
         }
     }
 
-    @Transactional
+
     public CartResponseDTO updateCartItem(String token, CartItemDTO cartItemDTO) {
         String userId = identityService.getUserIdFromToken(token);
         Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        cart.getItems().stream()
-                .filter(item -> item.getProductId().equals(cartItemDTO.getProductId()))
-                .findFirst()
-                .ifPresent(item -> item.setQuantity(cartItemDTO.getQuantity()));
+        List<CartItem> items = cart.getItems();
+        for (CartItem item : items) {
+            if (item.getProductId().equals(cartItemDTO.getProductId())) {
+                item.setQuantity(cartItemDTO.getQuantity());
+                break;
+            }
+        }
 
         cartRepository.save(cart);
         return convertToResponseDTO(cart);
     }
+
 
     @Transactional
     public CartResponseDTO removeCartItem(String token, String productId) {
