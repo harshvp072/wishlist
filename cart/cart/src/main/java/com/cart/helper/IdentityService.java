@@ -13,7 +13,7 @@ public class IdentityService {
 
     // Hardcoded test token mapping
     private static final Map<String, String> MOCK_TOKENS = Map.of(
-            "user-123", "hvp"
+            "user-1", "H123456"
     );
 
     public String getTokenByUserId(String userId) {
@@ -50,7 +50,6 @@ public class IdentityService {
                 return entry.getKey();
             }
         }
-
         throw new RuntimeException("Invalid token");
     }
 }

@@ -1,4 +1,4 @@
-package com.cart.helper;
+package com.cart.helper;//package com.cart.helper;
 
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -44,3 +44,24 @@ public class ProductService {
         }
     }
 }
+//import org.springframework.stereotype.Service;
+//
+//import java.util.Set;
+//
+//@Service
+//public class ProductService {
+//
+//    // ✅ Mock valid product IDs for testing
+//    private static final Set<String> MOCK_VALID_PRODUCTS = Set.of("P-101", "P-202", "P-303");
+//
+//    public void validateProduct(String productId) {
+//        // ✅ Hardcoded validation
+//        if (MOCK_VALID_PRODUCTS.contains(productId)) {
+//            System.out.println("✅ Product validated (Hardcoded): " + productId);
+//            return;
+//        }
+//
+//        // ❌ Simulate an invalid product scenario
+//        throw new RuntimeException("❌ Invalid product: " + productId);
+//    }
+//}

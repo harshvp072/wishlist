@@ -38,15 +38,23 @@ public class CartService {
 
     public CartResponseDTO addToCart(String token, CartRequestDTO cartRequestDTO) {
         try {
+            System.out.println("Received request: " + cartRequestDTO);  // ✅ Log request body
+
             String userId = identityService.getUserIdFromToken(token);
+            System.out.println("Extracted User ID: " + userId); // ✅ Log extracted userId
+
             Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
+            System.out.println("Cart found or created: " + cart); // ✅ Log cart info
 
             if (cart.getItems() == null) {
                 cart.setItems(new ArrayList<>());
             }
 
             for (CartItemDTO itemDTO : cartRequestDTO.getItems()) {
+                System.out.println("Processing item: " + itemDTO); // ✅ Log item being processed
+
                 productService.validateProduct(itemDTO.getProductId()); // ✅ Validate product before adding
+                System.out.println("Product validated: " + itemDTO.getProductId()); // ✅ Log successful validation
 
                 // 🔹 Check if product is already in the cart
                 Optional<CartItem> existingItem = cart.getItems().stream()
@@ -54,10 +62,10 @@ public class CartService {
                         .findFirst();
 
                 if (existingItem.isPresent()) {
-                    // 🔹 If exists, update quantity
+                    System.out.println("Updating quantity for: " + itemDTO.getProductId()); // ✅ Log quantity update
                     existingItem.get().setQuantity(existingItem.get().getQuantity() + itemDTO.getQuantity());
                 } else {
-                    // 🔹 Else, create a new cart item
+                    System.out.println("Adding new product to cart: " + itemDTO.getProductId()); // ✅ Log new product addition
                     CartItem cartItem = new CartItem();
                     cartItem.setCart(cart);
                     cartItem.setProductId(itemDTO.getProductId());
@@ -66,9 +74,13 @@ public class CartService {
                 }
             }
 
+            System.out.println("Saving cart: " + cart); // ✅ Log cart before saving
             cartRepository.save(cart);
+            System.out.println("Cart saved successfully!"); // ✅ Log success
+
             return convertToResponseDTO(cart);
         } catch (Exception e) {
+            e.printStackTrace();  // ✅ Print the full error
             throw new RuntimeException("Error adding item to cart: " + e.getMessage(), e);
         }
     }
