@@ -36,7 +36,6 @@ public class CartService {
         }
     }
 
-    @Transactional
     public CartResponseDTO addToCart(String token, CartRequestDTO cartRequestDTO) {
         try {
             String userId = identityService.getUserIdFromToken(token);
@@ -74,7 +73,6 @@ public class CartService {
         }
     }
 
-    @Transactional
     public CartResponseDTO removeCartItem(String token, String productId) {
         try {
             productService.validateProduct(productId); // ✅ Validate product before removing
@@ -95,7 +93,24 @@ public class CartService {
         }
     }
 
-    @Transactional
+    // Order response
+    public List<CartItemDTO> getCartItemsForOrder(String token) {
+        String userId = identityService.getUserIdFromToken(token);
+        Optional<Cart> cartOptional = cartRepository.findByUserId(userId);
+
+        return cartOptional.map(cart -> {
+            List<CartItemDTO> cartItemDTOList = new ArrayList<>();
+
+            for (CartItem item : cart.getItems()) {
+                CartItemDTO dto = new CartItemDTO(item.getProductId(), item.getQuantity());
+                cartItemDTOList.add(dto);
+            }
+
+            return cartItemDTOList;
+        }).orElseThrow(() -> new RuntimeException("Cart not found for user"));
+
+    }
+
     public void clearCart(String token) {
         String userId = identityService.getUserIdFromToken(token);
         Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));

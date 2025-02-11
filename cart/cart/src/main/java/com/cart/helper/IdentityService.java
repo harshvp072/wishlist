@@ -13,7 +13,7 @@ public class IdentityService {
 
     // Hardcoded test token mapping
     private static final Map<String, String> MOCK_TOKENS = Map.of(
-            "user-124", "H.V.P-072"
+            "user-123", "hvp"
     );
 
     public String getTokenByUserId(String userId) {
